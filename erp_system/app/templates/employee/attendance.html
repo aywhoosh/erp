@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Attendance Records</h1>
+    </div>
+    {% if not current_user.role.value in ['admin', 'hr', 'manager'] %}
+    <div class="col-auto">
+        <div class="btn-group">
+            <button id="checkInBtn" class="btn btn-success">
+                <i class="fas fa-sign-in-alt"></i> Check In
+            </button>
+            <button id="checkOutBtn" class="btn btn-danger">
+                <i class="fas fa-sign-out-alt"></i> Check Out
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            {% if current_user.role.value in ['admin', 'hr', 'manager'] %}
+            <div class="col-md-3">
+                <label class="form-label">Employee</label>
+                <select class="form-select" name="employee_id">
+                    <option value="">All Employees</option>
+                    {% for record in records %}
+                    {% if record.employee.id not in seen_employees %}
+                    <option value="{{ record.employee.id }}" 
+                            {% if request.args.get('employee_id')|int == record.employee.id %}selected{% endif %}>
+                        {{ record.employee.user.first_name }} {{ record.employee.user.last_name }}
+                    </option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="status">
+                    <option value="">All Status</option>
+                    <option value="Present" {% if request.args.get('status') == 'Present' %}selected{% endif %}>Present</option>
+                    <option value="Late" {% if request.args.get('status') == 'Late' %}selected{% endif %}>Late</option>
+                    <option value="Absent" {% if request.args.get('status') == 'Absent' %}selected{% endif %}>Absent</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Date From</label>
+                <input type="date" class="form-control" name="date_from" 
+                       value="{{ request.args.get('date_from', '') }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label">Date To</label>
+                <input type="date" class="form-control" name="date_to" 
+                       value="{{ request.args.get('date_to', '') }}">
+            </div>
+            
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="{{ url_for('employee.attendance') }}" class="btn btn-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Attendance Records Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        {% if current_user.role.value in ['admin', 'hr', 'manager'] %}
+                        <th>Employee</th>
+                        {% endif %}
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                        {% if current_user.role.value in ['admin', 'hr', 'manager'] %}
+                        <td>
+                            <a href="{{ url_for('employee.profile', employee_id=record.employee.id) }}">
+                                {{ record.employee.user.first_name }} {{ record.employee.user.last_name }}
+                            </a>
+                        </td>
+                        {% endif %}
+                        <td>{{ record.check_in.strftime('%H:%M:%S') if record.check_in else '-' }}</td>
+                        <td>{{ record.check_out.strftime('%H:%M:%S') if record.check_out else '-' }}</td>
+                        <td>
+                            {% if record.check_in and record.check_out %}
+                                {% set duration = (record.check_out - record.check_in) %}
+                                {{ '%d:%02d' % (duration.seconds//3600, (duration.seconds//60)%60) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if record.status == 'Present' %}bg-success
+                                           {% elif record.status == 'Late' %}bg-warning
+                                           {% else %}bg-danger{% endif %}">
+                                {{ record.status }}
+                            </span>
+                        </td>
+                        <td>{{ record.notes or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkInBtn = document.getElementById('checkInBtn');
+    const checkOutBtn = document.getElementById('checkOutBtn');
+    
+    if (checkInBtn) {
+        checkInBtn.addEventListener('click', function() {
+            fetch("{{ url_for('employee.check_in') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Check-in recorded at ' + data.time);
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    }
+    
+    if (checkOutBtn) {
+        checkOutBtn.addEventListener('click', function() {
+            fetch("{{ url_for('employee.check_out') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Check-out recorded at ' + data.time);
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

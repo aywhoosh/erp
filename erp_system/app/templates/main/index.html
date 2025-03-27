@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row align-items-center" style="min-height: 70vh;">
+    <div class="col-md-6">
+        <h1 class="display-4 fw-bold">Enterprise Resource Planning</h1>
+        <p class="lead mb-4">A comprehensive solution for office management, employee tracking, payroll processing, workflow automation, and financial reporting.</p>
+        <div class="d-grid gap-2 d-md-flex">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-4 me-md-2">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg px-4">Register</a>
+        </div>
+    </div>
+    <div class="col-md-6 text-center">
+        <i class="fas fa-building fa-10x text-primary opacity-50"></i>
+    </div>
+</div>
+
+<div class="row mt-5 pt-5">
+    <div class="col-md-12 text-center">
+        <h2>Key Features</h2>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h4 class="card-title">Employee Management</h4>
+                <p class="card-text">Complete employee profiles, attendance tracking, and performance monitoring.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-money-bill-wave fa-3x text-success mb-3"></i>
+                <h4 class="card-title">Payroll Processing</h4>
+                <p class="card-text">Automated salary calculations, tax deductions, and bank integration.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-boxes fa-3x text-warning mb-3"></i>
+                <h4 class="card-title">Resource Allocation</h4>
+                <p class="card-text">Track office resources and manage inventory efficiently.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-tasks fa-3x text-info mb-3"></i>
+                <h4 class="card-title">Workflow Automation</h4>
+                <p class="card-text">Streamline approvals, leave requests, and task assignments.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-pie fa-3x text-danger mb-3"></i>
+                <h4 class="card-title">Financial Reporting</h4>
+                <p class="card-text">Track expenses, generate balance sheets, and ensure tax compliance.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-shield-alt fa-3x text-secondary mb-3"></i>
+                <h4 class="card-title">Security Compliance</h4>
+                <p class="card-text">Role-Based Access Control and multi-factor authentication.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

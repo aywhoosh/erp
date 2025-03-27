@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Workflow Dashboard</h1>
+    </div>
+    <div class="col-auto">
+        <div class="btn-group">
+            <a href="{{ url_for('workflow.leave_request') }}" class="btn btn-primary">
+                <i class="fas fa-calendar-plus"></i> New Leave Request
+            </a>
+            <a href="{{ url_for('workflow.expense_claim') }}" class="btn btn-success">
+                <i class="fas fa-receipt"></i> New Expense Claim
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Approvals -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">Pending Approvals</h5>
+            </div>
+            <div class="card-body">
+                {% if assigned_workflows %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Title</th>
+                                <th>Requester</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for workflow in assigned_workflows %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if workflow.workflow_type.value == 'leave_request' %}bg-info
+                                                     {% elif workflow.workflow_type.value == 'expense_claim' %}bg-success
+                                                     {% else %}bg-secondary{% endif %}">
+                                        {{ workflow.workflow_type.value|title|replace('_', ' ') }}
+                                    </span>
+                                </td>
+                                <td>{{ workflow.title }}</td>
+                                <td>{{ workflow.requester.first_name }} {{ workflow.requester.last_name }}</td>
+                                <td>{{ workflow.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <button class="btn btn-success btn-sm approve-btn" data-id="{{ workflow.id }}">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger btn-sm reject-btn" data-id="{{ workflow.id }}">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No pending approvals.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Requests -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">My Requests</h5>
+            </div>
+            <div class="card-body">
+                {% if requested_workflows %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Title</th>
+                                <th>Submitted</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for workflow in requested_workflows %}
+                            <tr>
+                                <td>
+                                    <span class="badge {% if workflow.workflow_type.value == 'leave_request' %}bg-info
+                                                     {% elif workflow.workflow_type.value == 'expense_claim' %}bg-success
+                                                     {% else %}bg-secondary{% endif %}">
+                                        {{ workflow.workflow_type.value|title|replace('_', ' ') }}
+                                    </span>
+                                </td>
+                                <td>{{ workflow.title }}</td>
+                                <td>{{ workflow.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ workflow.assigned_to.first_name }} {{ workflow.assigned_to.last_name }}</td>
+                                <td>
+                                    <span class="badge {% if workflow.status.value == 'pending' %}bg-warning
+                                                     {% elif workflow.status.value == 'approved' %}bg-success
+                                                     {% elif workflow.status.value == 'rejected' %}bg-danger
+                                                     {% else %}bg-secondary{% endif %}">
+                                        {{ workflow.status.value|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No requests found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Handle workflow approval
+    $('.approve-btn').click(function() {
+        const workflowId = $(this).data('id');
+        if (confirm('Are you sure you want to approve this request?')) {
+            $.post(`/workflow/approve/${workflowId}`, function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            });
+        }
+    });
+    
+    // Handle workflow rejection
+    $('.reject-btn').click(function() {
+        const workflowId = $(this).data('id');
+        if (confirm('Are you sure you want to reject this request?')) {
+            $.post(`/workflow/reject/${workflowId}`, function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

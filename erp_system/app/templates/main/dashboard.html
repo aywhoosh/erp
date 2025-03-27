@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Dashboard</h2>
+    
+    <div class="row">
+        <!-- Quick Stats -->
+        <div class="col-md-3 mb-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Employees</h5>
+                    <h3 class="card-text">{{ stats.total_employees }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Present Today</h5>
+                    <h3 class="card-text">{{ stats.present_today }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Requests</h5>
+                    <h3 class="card-text">{{ stats.pending_requests }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Tasks Due Today</h5>
+                    <h3 class="card-text">{{ stats.tasks_due }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('employee.attendance') }}" class="btn btn-outline-primary">Mark Attendance</a>
+                        <a href="{{ url_for('workflow.leave_request') }}" class="btn btn-outline-secondary">Request Leave</a>
+                        <a href="{{ url_for('workflow.expense_claim') }}" class="btn btn-outline-info">Submit Expense Claim</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for notification in notifications %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ notification.title }}</strong>
+                                    <p class="mb-0 text-muted">{{ notification.message }}</p>
+                                </div>
+                                <small class="text-muted">{{ notification.timestamp }}</small>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="list-group-item">No new notifications</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.role.value in ['admin', 'manager'] %}
+    <div class="row">
+        <!-- Department Performance -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Department Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="deptPerformanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Status -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Project Status</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="projectStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Initialize charts if user is admin/manager
+    {% if current_user.role.value in ['admin', 'manager'] %}
+    // Department Performance Chart
+    const deptCtx = document.getElementById('deptPerformanceChart').getContext('2d');
+    new Chart(deptCtx, {
+        type: 'bar',
+        data: {{ dept_performance_data | tojson }},
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // Project Status Chart
+    const projCtx = document.getElementById('projectStatusChart').getContext('2d');
+    new Chart(projCtx, {
+        type: 'doughnut',
+        data: {{ project_status_data | tojson }},
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}
+{% endblock %}
